@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .submit-btn {
+    @apply rounded-md bg-pink-400 px-4 py-2 text-white hover:bg-pink-500 disabled:bg-pink-200;
+  }
+  .chat-avatar {
+    @apply rounded-full shadow-md shadow-black/50;
+  }
+  .side-menu-item {
+    @apply m-2 p-2 flex items-center rounded-sm gap-4 hover:bg-gray-800;
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
