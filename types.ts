@@ -1,1 +1,1 @@
-export type RoleType = 'user' | 'system' | 'assistant'
+export type RoleType = 'user' | 'system' | 'assistant' | 'warning'

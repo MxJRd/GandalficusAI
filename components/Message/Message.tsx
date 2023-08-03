@@ -2,6 +2,7 @@ import { RoleType } from '@/types'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { faHatWizard } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import Image from 'next/image'
 import React from 'react'
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
@@ -15,7 +16,11 @@ export function Message({ role, content }: MessageProps) {
   const { user } = useUser()
   const userHasProfilePicture = (user && user?.picture) ? user.picture : ''
   return (
-    <div className={`grid grid-cols-[30px_1fr] gap-5 p-5 ${role === 'assistant' ? 'bg-gray-600' : ''}`}>
+    <div className={classNames(
+        'grid grid-cols-[30px_1fr] gap-5 p-5',
+        `${role === 'assistant' ? 'bg-gray-600' : ''}`,
+        `${role === 'warning' ? 'bg-red-600' : ''}`
+      )}>
       <div>
         {
           role === 'user' && <Image src={userHasProfilePicture} width={30} height={30} alt='user-avatar' className='chat-avatar' />

@@ -8,6 +8,19 @@ export const config = {
 export default async function handler(req: NextRequest) {
   try {
     const { message, id: chatIdFromParam }: { message: string, id: string | null } = await req.json()
+
+    // validate message data
+    if(!message || typeof message !== 'string' || message.length > 200) {
+      return new Response(
+        {
+          message: 'Message is required and must be less than 200 characters in total.'
+        },
+        {
+          status: 422
+        }
+      )
+    }
+
     const initialChatMessage = {
       role: 'system',
       content: 'Your name is Gandalficus. You are a wise and helpful wizard who is based on Gandalf from (Lord Of The Rings) and other wise wizards in literature. Your response should be formatted as markdown. Embellish sentences as Gandalf and other wizards in lore would.'
@@ -19,7 +32,6 @@ export default async function handler(req: NextRequest) {
 
     if(chatId) {
       // add a message to the chatGroup
-      console.log(chatId, message)
       const res = await fetch(`${req.headers.get('origin')}/api/chat/addMessageToChat`, {
         method: 'POST',
         headers: {
@@ -107,5 +119,13 @@ export default async function handler(req: NextRequest) {
     return new Response(stream)
   } catch(e) {
     console.error(e)
+    return new Response(
+      {
+        message: 'An error occurred in sendMessage.'
+      },
+      {
+          status: 500
+      }
+    )
   }
 }

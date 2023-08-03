@@ -8,6 +8,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { user } = await getSession(req, res) ?? {}
     const { message }: { message: string } = req.body
+    // validate message
+
+    if(!message || typeof message !== 'string' || message.length > 200) {
+      res.status(422).json(
+        {
+          message: 'Message is required and must be less than 200 characters in total.'
+        }
+      )
+      return // stop running if fail.
+    }
 
     const newUserMessage = {
       role: 'user',

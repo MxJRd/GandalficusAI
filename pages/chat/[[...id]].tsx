@@ -9,6 +9,8 @@ import { GetServerSidePropsContext } from "next"
 import clientPromise from "@/lib/mongodb"
 import { getSession } from "@auth0/nextjs-auth0"
 import { ObjectId } from "mongodb"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faHatWizard } from "@fortawesome/free-solid-svg-icons"
 
 
 
@@ -25,7 +27,9 @@ export default function Chat({ id: chatId, title, messages = [] }: { id: string,
   const [userInput, setUserInput] = useState('')
   const [loadingResponse, setLoadingResponse] = useState(false)
   const [newChatId, setNewChatId] = useState<string | null>('')
+  const [originalChatId, setOriginalChatId] = useState(chatId)
   const router = useRouter()
+  const routeHasChanged = originalChatId !== chatId
 
   useEffect(() => {
     setNewChatMessages([])
@@ -33,7 +37,7 @@ export default function Chat({ id: chatId, title, messages = [] }: { id: string,
   }, [chatId]) // when route changes, reset messageList and routeParams
 
   useEffect(() => { // save newly streamed message to new chat messages
-    if(!loadingResponse && fullIncomingMessage) {
+    if(!routeHasChanged && !loadingResponse && fullIncomingMessage) { // if loaded, fullMessageContent is saved, and route hasn't changed, update the chatMessages list.
       setNewChatMessages(prevMessages => [...prevMessages, {
         _id: uuid(),
         role: 'assistant',
@@ -43,7 +47,7 @@ export default function Chat({ id: chatId, title, messages = [] }: { id: string,
 
     setFullIncomingMessage('') // clear
 
-  }, [loadingResponse, fullIncomingMessage])
+  }, [loadingResponse, fullIncomingMessage, routeHasChanged])
 
   useEffect(() => {
     if(!loadingResponse && newChatId) {
@@ -55,7 +59,7 @@ export default function Chat({ id: chatId, title, messages = [] }: { id: string,
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-
+    // setOriginalChatId(chatId)
     setNewChatMessages((prevMessages) => {
       return [...prevMessages, {
         _id: uuid(),
@@ -98,20 +102,36 @@ export default function Chat({ id: chatId, title, messages = [] }: { id: string,
     setLoadingResponse(false)
   
   }
+
   const allChatMessages = [...messages, ...newChatMessages]
+
   return (
     <>
       <title>New Chat</title>
       <div className="grid h-screen grid-cols-[260px_1fr]"> {/* To account for spaces in TailwindCSS we can use an underscore when typing custom sizes */}
         <ChatSidebar chatId={chatId} />
-        <div className='bg-red-500 flex flex-col overflow-hidden'>
-          <div className='flex-1 text-white overflow-scroll'>
-            {
-              allChatMessages.map(message => <Message key={message._id} role={message.role} content={message.content} />)
+        <div className='bg-gray-700 flex flex-col overflow-hidden'>
+          <div className='flex flex-col-reverse flex-1 text-white overflow-scroll'>{/* Browsers will treat the bottom of the div as the top of the div because of column reverse. Coolest. Trick. Ever. */}
+            
+            { (!(allChatMessages.length > 0) && !loadingResponse) &&
+              <div className='flex items-center text-center justify-center flex-col m-auto'>
+                <FontAwesomeIcon icon={faHatWizard} className='text-6xl text-blue-600' />
+                <h1 className='text-white/50 text-4xl font-bold'>Ask me a question, traveler!</h1>
+              </div>
             }
-            {
-              incomingMessage && <Message role='assistant' content={incomingMessage} />
-            }
+            { allChatMessages.length > 0 && (
+              <div className='mb-auto'> {/* Set margin bottom to auto so that way the div content starts at the top. Without this rule, the div content starts at the bottom. */}
+                {
+                  allChatMessages.map(message => <Message key={message._id} role={message.role} content={message.content} />)
+                }
+                {
+                  (!!incomingMessage && !routeHasChanged) && <Message role='assistant' content={incomingMessage} />
+                }
+                {
+                  (!!incomingMessage && !!routeHasChanged) && <Message role='warning' content='Only one message at a time. Please allow any other responses to complete before sending another message.' />
+                }
+              </div>
+            )}
           </div>
           <footer className='bg-gray-800 p-10'>
             <form
@@ -138,13 +158,31 @@ export default function Chat({ id: chatId, title, messages = [] }: { id: string,
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const chatId = ctx.params?.id?.[0] ?? null
   if(chatId) {
+    let validId;
+    try {
+      validId = new ObjectId(chatId)
+    } catch(e) {
+      console.error(e)
+      return {
+        redirect: {
+          destination: '/chat'
+        }
+      }
+    }
     const { user } = await getSession(ctx.req, ctx.res) ?? {}
     const client = await clientPromise
     const db = client.db('WizardAIProject')
     const chat = await db.collection('chats').findOne({
       userId: user?.sub,
-      _id: new ObjectId(chatId)
+      _id: validId
     })
+    if(!chat) {
+      return {
+        redirect: {
+          destination: '/chat'
+        }
+      }
+    }
     return {
       props: {
         id: chatId,
