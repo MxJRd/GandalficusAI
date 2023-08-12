@@ -12,9 +12,9 @@ export default async function handler(req: NextRequest) {
     // validate message data
     if(!message || typeof message !== 'string' || message.length > 200) {
       return new Response(
-        {
+        JSON.stringify({
           message: 'Message is required and must be less than 200 characters in total.'
-        },
+        }),
         {
           status: 422
         }
@@ -120,9 +120,9 @@ export default async function handler(req: NextRequest) {
   } catch(e) {
     console.error(e)
     return new Response(
-      {
+      JSON.stringify({
         message: 'An error occurred in sendMessage.'
-      },
+      }),
       {
           status: 500
       }

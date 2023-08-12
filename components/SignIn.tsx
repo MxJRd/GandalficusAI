@@ -3,6 +3,7 @@ import CommonButton from "./common/CommonButton"
 import Head from "next/head"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faHatWizard } from "@fortawesome/free-solid-svg-icons"
+import Link from "next/link"
 
 export default function SignIn() {
   const { user, isLoading, error } = useUser()
@@ -25,10 +26,10 @@ export default function SignIn() {
         {!user && (
           <>
             <CommonButton border='none'>
-              <a href='/api/auth/login' className=''>Login</a>
+              <Link href='/api/auth/login' className=''>Login</Link>
             </CommonButton>
             <CommonButton border='none'>
-              <a href='/api/auth/signup' className=''>Signup</a>
+              <Link href='/api/auth/signup' className=''>Signup</Link>
             </CommonButton>
           </>
         )

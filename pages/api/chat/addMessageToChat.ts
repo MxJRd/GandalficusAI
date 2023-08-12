@@ -1,6 +1,6 @@
 import clientPromise from "@/lib/mongodb"
 import { getSession } from "@auth0/nextjs-auth0"
-import { ObjectId } from "mongodb"
+import { ObjectId, PushOperator } from "mongodb"
 import { NextApiRequest, NextApiResponse } from "next"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         messages: {
           role, content
         }
-      }
+      } as unknown as PushOperator<Document>
     }, {
       returnDocument: 'after'
     })
